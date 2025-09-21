@@ -15,8 +15,12 @@ char[][] board = {
 
 void setup() {
     size(800, 800);
+    background(150);
     grid(400, 300, 500);
     fill(0);
+    textSize(20);
+    drawNum(x-4, y+6, s);
+    drawSelection(x-4, y, s);
     text("Valid: " + isValidSudoku(board), 5, height - 10);
 }
 
@@ -41,6 +45,13 @@ void drawNum(int x, int y, int s) {
             if (board[i][j] != '.')
                 text(board[i][j], x - s/2 + s/18 + (j*s/9), y - s/2 + s/18 + (i*s/9));
         }
+    }
+}
+
+void drawSelection(int x, int y, int s) {
+    line();
+    for (int i = 0; i < 9; i++) {
+        text(i+1, x - s/2 + s/18 + (i*s/9), y + s/2 + s/9);
     }
 }
 
@@ -83,4 +94,5 @@ boolean isValidSudoku(char[][] arr) {
     }
     return true;
 }
+
 
