@@ -35,43 +35,52 @@ void grid(int x, int y, int s) {
     }
 }
 
-boolean isValidSudoku(char[][] arr) {
-  // check rows and cols
-  for (int i = 0; i < 9; i++) {
-    boolean[] row = new boolean[10];
-    boolean[] col = new boolean[10];
-    for (int j = 0; j < 9; j++) {
-      // check row
-      if (arr[i][j] != '.') {
-        int num = arr[i][j] - '0';
-        if (row[num]) return false;
-        row[num] = true;
-      }
-      // check col
-      if (arr[j][i] != '.') {
-        int num = arr[j][i] - '0';
-        if (col[num]) return false;
-        col[num] = true;
-      }
-    }
-  }
-
-  // check 3x3 boxes
-  for (int boxRow = 0; boxRow < 9; boxRow += 3) {
-    for (int boxCol = 0; boxCol < 9; boxCol += 3) {
-      boolean[] box = new boolean[10];
-      for (int i = 0; i < 3; i++) {
-        for (int j = 0; j < 3; j++) {
-          char c = arr[boxRow + i][boxCol + j];
-          if (c != '.') {
-            int num = c - '0';
-            if (box[num]) return false;
-            box[num] = true;
-          }
+void drawNum(int x, int y, int s) {
+    for (int i = 0; i < 9; i++) {
+        for (int j = 0; j < 9; j++) {
+            if (board[i][j] != '.')
+                text(board[i][j], x - s/2 + s/18 + (j*s/9), y - s/2 + s/18 + (i*s/9));
         }
-      }
     }
-  }
-
-  return true;
 }
+
+boolean isValidSudoku(char[][] arr) {
+    // check rows and cols
+    for (int i = 0; i < 9; i++) {
+        boolean[] row = new boolean[10];
+        boolean[] col = new boolean[10];
+        for (int j = 0; j < 9; j++) {
+            // check row
+            if (arr[i][j] != '.') {
+                int num = arr[i][j] - '0';
+                if (row[num]) return false;
+                row[num] = true;
+            }
+            // check col
+            if (arr[j][i] != '.') {
+                int num = arr[j][i] - '0';
+                if (col[num]) return false;
+                col[num] = true;
+            }
+        }
+    }
+
+    // check 3x3 boxes
+    for (int boxRow = 0; boxRow < 9; boxRow += 3) {
+        for (int boxCol = 0; boxCol < 9; boxCol += 3) {
+            boolean[] box = new boolean[10];
+            for (int i = 0; i < 3; i++) {
+                for (int j = 0; j < 3; j++) {
+                    char c = arr[boxRow + i][boxCol + j];
+                    if (c != '.') {
+                        int num = c - '0';
+                        if (box[num]) return false;
+                        box[num] = true;
+                    }
+                }
+            }
+        }
+    }
+    return true;
+}
+
