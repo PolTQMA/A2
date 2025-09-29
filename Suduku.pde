@@ -1,25 +1,24 @@
 //Suduku
-import interfascia.*;
-
 char[][] board = {
-    {'5','3','.','.','7','.','.','.','.'},
-    {'6','.','.','1','9','5','.','.','.'},
-    {'.','9','8','.','.','.','.','6','.'},
-    {'8','.','.','.','6','.','.','.','3'},
-    {'4','.','.','8','.','3','.','.','1'},
-    {'7','.','.','.','2','.','.','.','6'},
-    {'.','6','.','.','.','.','2','8','.'},
-    {'.','.','.','4','1','9','.','.','5'},
-    {'.','.','.','.','8','.','.','7','9'}
+    {'5','3','0','0','7','0','0','0','0'},
+    {'6','0','0','1','9','5','0','0','0'},
+    {'0','9','8','0','0','0','0','6','0'},
+    {'8','0','0','0','6','0','0','0','3'},
+    {'4','0','0','8','0','3','0','0','1'},
+    {'7','0','0','0','2','0','0','0','6'},
+    {'0','6','0','0','0','0','2','8','0'},
+    {'0','0','0','4','1','9','0','0','5'},
+    {'0','0','0','0','8','0','0','7','9'}
 };
 
-int x = 400;
-int y = 300;
-int s = 500;
-char cur = '.';
+int x, y, s;
+char cur = '0';
 
 void setup() {
-    size(800, 800);
+    size(540, 960);
+    s = min(width, height)-100;
+    x = width/2;
+    y = s/2+50;
     background(150);
 }
 
@@ -27,9 +26,10 @@ void draw() {
     if (mousePressed) {
         if (mouseY > y + s/2 + s/18  && mouseY < y + s/2 + s/18 + s/9) {
             for (int i = 0; i < 9; i++) {
-                if (mouseX > x - s/2 + i*(s/9) && mouseX < x - s/2 + (i+1)*(s/9)) {
+                if (i != 9)
                     cur = char(i + '1');
-                }
+                else
+                    cur = '0';
             }
         }
         for (int i = 0; i < 9; i++) {
@@ -46,8 +46,8 @@ void draw() {
     grid(x, y, s);
     fill(0);
     textSize(20);
-    drawNum(x-4, y+6, s);
-    drawSelection(x-4, y, s);
+    drawNum(x, y, s);
+    drawSelection(x, y, s);
     text("Selected: " + cur, 5, height - 40);
     text("valid: " + isValidSudoku(board), 5, height - 10);
 }
@@ -70,7 +70,7 @@ void grid(int x, int y, int s) {
 void drawNum(int x, int y, int s) {
     for (int i = 0; i < 9; i++) {
         for (int j = 0; j < 9; j++) {
-            if (board[i][j] != '.')
+            if (board[i][j] != '0')
                 text(board[i][j], x - s/2 + s/18 + (j*s/9), y - s/2 + s/18 + (i*s/9));
         }
     }
@@ -93,13 +93,13 @@ boolean isValidSudoku(char[][] arr) {
         boolean[] col = new boolean[10];
         for (int j = 0; j < 9; j++) {
             // check row
-            if (arr[i][j] != '.') {
+            if (arr[i][j] != '0') {
                 int num = arr[i][j] - '0';
                 if (row[num]) return false;
                 row[num] = true;
             }
             // check col
-            if (arr[j][i] != '.') {
+            if (arr[j][i] != '0') {
                 int num = arr[j][i] - '0';
                 if (col[num]) return false;
                 col[num] = true;
@@ -114,7 +114,7 @@ boolean isValidSudoku(char[][] arr) {
             for (int i = 0; i < 3; i++) {
                 for (int j = 0; j < 3; j++) {
                     char c = arr[boxRow + i][boxCol + j];
-                    if (c != '.') {
+                    if (c != '0') {
                         int num = c - '0';
                         if (box[num]) return false;
                         box[num] = true;
