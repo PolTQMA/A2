@@ -12,7 +12,6 @@ char cur = '.';
 
 void setup() {
     fullScreen();
-    String path = Environment.getExternalStorageDirectory().getAbsolutePath() + "/Download/board.txt";
     String[] lines = loadStrings("board.txt");
   
     // make 9x9 board
