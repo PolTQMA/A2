@@ -15,7 +15,7 @@ int x, y, s;
 char cur = '0';
 
 void setup() {
-    size(540, 960);
+    fullScreen();
     s = min(width, height)-100;
     x = width/2;
     y = s/2+50;
@@ -24,16 +24,20 @@ void setup() {
 
 void draw() {
     if (mousePressed) {
-        if (mouseY > y + s/2 + s/18  && mouseY < y + s/2 + s/18 + s/9) {
-            for (int i = 0; i < 9; i++) {
-                if (i != 9)
-                    cur = char(i + '1');
-                else
-                    cur = '0';
+        if (mouseY > y + s/2 && mouseY < y + s/2 + 2*s/9) {
+            for (int i = 0; i < 10; i++) {
+                if (mouseX > x - s/2 + i*(s/9) && mouseX < x - s/2 + (i+1)*(s/9)) {
+                    if (i != 9) {
+                        cur = char(i + '1');
+                    }
+                    else
+                        cur = '0';
+                    }
+                }
             }
-        }
+        
         for (int i = 0; i < 9; i++) {
-            for (int j = 0; j < 9; j++) {
+            for (int j = 0; j < 9; j++){
                 if (mouseY > y - s/2 + i*(s/9) && mouseY < y - s/2 + (i+1)*(s/9)) {
                     if (mouseX > x - s/2 + j*(s/9) && mouseX < x - s/2 + (j+1)*(s/9)) {
                         board[i][j] = cur;
@@ -45,11 +49,12 @@ void draw() {
     background(150);
     grid(x, y, s);
     fill(0);
-    textSize(20);
+    textSize(50);
     drawNum(x, y, s);
     drawSelection(x, y, s);
-    text("Selected: " + cur, 5, height - 40);
-    text("valid: " + isValidSudoku(board), 5, height - 10);
+    textSize(30);
+    text("Selected: " + cur, width/2 - width/6, height - 50);
+    text("valid: " + isValidSudoku(board), width/2 - width/6, height - 10);
 }
 
 void grid(int x, int y, int s) {
@@ -71,7 +76,7 @@ void drawNum(int x, int y, int s) {
     for (int i = 0; i < 9; i++) {
         for (int j = 0; j < 9; j++) {
             if (board[i][j] != '0')
-                text(board[i][j], x - s/2 + s/18 + (j*s/9), y - s/2 + s/18 + (i*s/9));
+                text(board[i][j], x - s/2 + s/18 + (j*s/9) - 12, y - s/2 + s/18 + (i*s/9) + 17);
         }
     }
 }
@@ -80,11 +85,13 @@ void drawSelection(int x, int y, int s) {
     line(x + s/2, y + s/2 + s/18, x - s/2, y + s/2 + s/18);
     line(x + s/2, y + s/2 + s/18 + s/9, x - s/2, y + s/2 + s/18 + s/9);
     for (int i = 0; i < 9; i++) {
-        text(i+1, x - s/2 + s/18 + (i*s/9) - 3, y + s/2 + s/9 + 5);
+        text(i+1, x - s/2 + s/18 + (i*s/9) - 12, y + s/2 + s/9 + 17);
         line(x - s/2 + (i*s/9), y + s/2 + s/18, x - s/2 + (i*s/9), y + s/2 + s/18 + s/9);
     }
     line(x - s/2 + s, y + s/2 + s/18, x - s/2 + s, y + s/2 + s/18 + s/9);
+    text('X', x - s/2 + s/18 + (10*s/9) - 12, y + s/2 + s/9 + 17);
 }
+
 
 boolean isValidSudoku(char[][] arr) {
     // check rows and cols
