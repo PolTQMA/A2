@@ -6,6 +6,7 @@ boolean[][] changed = new boolean[9][9];
 
 int x, y, s;
 int rows = 9, cals = 9;
+int hilightX, hilightY;
 int edge = 100;
 int adjust1, adjust2;
 char cur = '.';
@@ -26,8 +27,8 @@ void setup() {
     s = min(width, height) - edge;
     x = width/2;
     y = s/2 + edge/2;
-    adjust1 = s/2 - s/18;
-    adjust2 = s/2 + s/18;
+    adjust1 = s/2 - s/18; //center cell
+    adjust2 = s/2 + s/18; //outline grid
     background(150);
 }
 
@@ -51,6 +52,8 @@ void draw() {
                     if ((cur == '.' && changed[i][j]) || board[i][j] == '.') {
                         board[i][j] = cur;
                         changed[i][j] = true;
+                        hilightX = j;
+                        hilightY = i;
                     }
                 }
             }
@@ -88,15 +91,20 @@ void drawNum(int x, int y, int s) {
 }
 
 void drawSelection(int x, int y, int s) {
-    line(x - s/2 - s/18, y + s/2 + s/18, x + s/2 + s/18, y + s/2 + s/18);
-    line(x - s/2 - s/18, y + s/2 + s/18 + s/9, x + s/2 + s/18, y + s/2 + s/18 + s/9);
+    line(x - adjust2, y + adjust2, x + adjust2, y + adjust2);
+    line(x - adjust2, y + adjust2 + s/9, x + adjust2, y + adjust2 + s/9);
     for (int i = 0; i < 9; i++) {
         text(i+1, x - s/2 + (i*s/9), y + s/2 + s/9);
-        line(x - s/2 - s/18 + (i*s/9), y + s/2 + s/18, x - s/2 - s/18 + (i*s/9), y + s/2 + s/18 + s/9);
+        line(x - adjust2 + (i*s/9), y + adjust2, x - adjust2 + (i*s/9), y + adjust2 + s/9);
     }
     text('X', x - s/2 + s, y + s/2 + s/9);
-    line(x - s/2 - s/18 + s, y + s/2 + s/18, x - s/2 - s/18 + s, y + s/2 + s/18 + s/9);
+    line(x - adjust2 + s, y + adjust2, x - adjust2 + s, y + adjust2 + s/9);
     
+}
+
+void hilight(int row, int cal) {
+    fill(0, 0, 200);
+    rect(x - s/2 + row*(s/9) + row/3, y - s/2 + cal*(s/9) + cal/3, int(s/9), int(s/9));
 }
 
 boolean isValidSudoku(char[][] arr) {
