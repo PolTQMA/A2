@@ -2,13 +2,16 @@
 import android.os.Environment;
 
 char[][] board;
-boolean[][] changed = new boolean[9][9];
+boolean[][] canEdit = new boolean[9][9];
 
-int x, y, s;
-int rows = 9, cals = 9;
-int hilightX, hilightY;
-int edge = 100;
-int adjust1, adjust2;
+float centerX, centerY, gridSize;
+final int GRID_SIZE = 9;
+float cellSize;
+int edge = 50;
+float cellHalf;
+float bottomOffset;
+int selectedRow = -1;
+int selectedCol = -1;
 char cur = '.';
 
 void setup() {
@@ -20,99 +23,138 @@ void setup() {
   
     for (int i = 0; i < 9; i++) {
         for (int j = 0; j < 9; j++) {
-          board[i][j] = lines[i].charAt(j);
+          char c = lines[i].charAt(j);
+          board[i][j] = c;
+          if (c == '.') canEdit[i][j] = true;
         }
     }
+    gridSize = min(width, height) - edge;
+    centerX = width/2;
+    centerY = gridSize/2 + edge/2;
+    cellSize = gridSize / GRID_SIZE;
+    cellHalf = cellSize / 2;       // for centering text
+    bottomOffset = gridSize/2;     // for selection row under grid
     
-    s = min(width, height) - edge;
-    x = width/2;
-    y = s/2 + edge/2;
-    adjust1 = s/2 - s/18; //center cell
-    adjust2 = s/2 + s/18; //outline grid
-    background(150);
+    background(200);
+    textSize(50);
 }
 
 void draw() {
-    if (mousePressed) {
-        if (mouseY > y + s/2 && mouseY < y + s/2 + 2*s/9) {
-            for (int i = 0; i < 10; i++) {
-                if (mouseX > x - adjust2 + i*(s/9) && mouseX < x - adjust2 + (i+1)*(s/9)) {
-                    if (i != 9) {
-                        cur = char(i + '1');
-                    }
-                    else
-                        cur = '.';
-                    }
-                }
-            }
-        
-        for (int i = 0; i < 9; i++) {
-            for (int j = 0; j < 9; j++){
-                if ((mouseY > y - s/2 + i*(s/9) && mouseY < y - s/2 + (i+1)*(s/9)) && mouseX > x - s/2 + j*(s/9) && mouseX < x - s/2 + (j+1)*(s/9)) {
-                    if ((cur == '.' && changed[i][j]) || board[i][j] == '.') {
-                        board[i][j] = cur;
-                        changed[i][j] = true;
-                        hilightX = j;
-                        hilightY = i;
-                    }
-                }
-            }
-        }
-    }
-    background(150);
-    grid(x, y, s);
-    fill(0);
+    background(200);
+    noStroke();
     textAlign(CENTER, CENTER);
-    textSize(50);
-    drawNum(x, y, s);
-    drawSelection(x, y, s);
-    textSize(30);
-    text("Selected: " + cur, width/2, height - 50);
-    text("Stage: " + isValidSudoku(board), width/2, height - 20);
+    drawNum();
+    highlightSelectedCell();
+    stroke(0);
+    fill(0);
+    drawGrid();
+    drawSelectionRow();
+    text("Stage: " + isValidSudoku(board), width/2, height - 30);
 }
 
-void grid(int x, int y, int s) {
-    for (int i = 0; i < rows + 1; i++) {
-        if (i % 3 == 0)
-            strokeWeight(3);
-        line((x-s/2)+(i*s/9), (y-s/2), (x-s/2)+(i*s/9), (y+s/2));
-        line((x-s/2), (y-s/2)+(i*s/9), (x+s/2), (y-s/2)+(i*s/9));
-        strokeWeight(1);
+void drawGrid() {
+    for (int i = 0; i < GRID_SIZE + 1; i++) {
+        int weight = (i % 3 == 0) ? 3 : 1;
+        strokeWeight(weight);
+        line((centerX-gridSize/2)+(i*cellSize), (centerY-gridSize/2), (centerX-gridSize/2)+(i*cellSize), (centerY+gridSize/2));
+        line((centerX-gridSize/2), (centerY-gridSize/2)+(i*cellSize), (centerX+gridSize/2), (centerY-gridSize/2)+(i*cellSize));
     }
 }
 
-void drawNum(int x, int y, int s) {
-    for (int i = 0; i < cals; i++) {
-        for (int j = 0; j < rows; j++) {
-            if (board[i][j] != '.')
-                text(board[i][j], x - adjust1 + (j*s/9), y - adjust1 + (i*s/9));
+void drawNum() {
+    for (int row = 0; row < GRID_SIZE; row++) {
+        for (int col = 0; col < GRID_SIZE; col++) {
+            float cx = centerX - gridSize/2 + col*cellSize + cellHalf;
+            float cy = centerY - gridSize/2 + row*cellSize + cellHalf;
+            
+            if (!canEdit[row][col]) {
+                fill(180);
+                rect(cx - cellHalf, cy - cellHalf, cellSize, cellSize);
+            }
+            if (board[row][col] != '.') {
+                fill(0);
+                text(board[row][col], cx, cy);
+            }
         }
     }
 }
 
-void drawSelection(int x, int y, int s) {
-    line(x - adjust2, y + adjust2, x + adjust2, y + adjust2);
-    line(x - adjust2, y + adjust2 + s/9, x + adjust2, y + adjust2 + s/9);
-    for (int i = 0; i < 9; i++) {
-        text(i+1, x - s/2 + (i*s/9), y + s/2 + s/9);
-        line(x - adjust2 + (i*s/9), y + adjust2, x - adjust2 + (i*s/9), y + adjust2 + s/9);
+void drawSelectionRow() {
+    strokeWeight(1);
+    line(centerX - gridSize/2, centerY + bottomOffset, centerX + gridSize/2, centerY + bottomOffset);
+    line(centerX - gridSize/2, centerY + bottomOffset + cellSize, centerX + gridSize/2, centerY + bottomOffset + cellSize);
+    line(centerX - gridSize/2, centerY + bottomOffset + 2*cellSize, centerX + gridSize/2, centerY + bottomOffset + 2*cellSize);
+    line(centerX - gridSize/2, centerY + bottomOffset, centerX - gridSize/2, centerY + bottomOffset + 2*cellSize);
+    line(centerX - gridSize/2 + 9*cellSize, centerY + bottomOffset, centerX - gridSize/2 + 9*cellSize, centerY + bottomOffset + 2*cellSize);
+    for (int i = 0; i < GRID_SIZE; i++) {
+        float cx = centerX - gridSize/2 + i*cellSize + cellHalf;
+        float cy = centerY + bottomOffset + cellHalf;
+        text(i+1, cx, cy);
+        line(centerX - gridSize/2 + i*cellSize, centerY + bottomOffset, centerX - gridSize/2 + i*cellSize, centerY + bottomOffset + cellSize);
     }
-    text('X', x - s/2 + s, y + s/2 + s/9);
-    line(x - adjust2 + s, y + adjust2, x - adjust2 + s, y + adjust2 + s/9);
-    
+    text('X', centerX, centerY + bottomOffset + cellSize + cellHalf);
+    line(centerX - gridSize/2 + GRID_SIZE*cellSize, centerY + bottomOffset, centerX - gridSize/2 + GRID_SIZE*cellSize, centerY + bottomOffset + cellSize);
 }
 
-void hilight(int row, int cal) {
-    fill(0, 0, 200);
-    rect(x - s/2 + row*(s/9) + row/3, y - s/2 + cal*(s/9) + cal/3, int(s/9), int(s/9));
+void highlightSelectedCell() {
+    if (selectedRow != -1 && selectedCol != -1) { 
+        fill(0, 0, 255, 100);
+        rect(centerX - gridSize/2 + selectedRow*cellSize,
+             centerY - gridSize/2 + selectedCol*cellSize,
+             cellSize, cellSize);
+    }
 }
+
+void mousePressed() {
+    // inside Sudoku grid
+    if (mouseX > centerX - gridSize/2 && mouseX < centerX + gridSize/2 &&
+        mouseY > centerY - gridSize/2 && mouseY < centerY + gridSize/2) {
+        
+        // pick cell
+        selectedRow = (int)((mouseX - (centerX - gridSize/2)) / cellSize);
+        selectedCol = (int)((mouseY - (centerY - gridSize/2)) / cellSize);
+    }
+    
+    // inside number selection row (1–9)
+    else if (mouseY > centerY + bottomOffset && 
+             mouseY < centerY + bottomOffset + cellSize) {
+        
+        int index = (int)((mouseX - (centerX - gridSize/2)) / cellSize);
+        
+        if (index >= 0 && index < GRID_SIZE) {
+            cur = (char)('1' + index);  // set current number
+        }
+
+        // update board if a cell is selected and editable
+        if (selectedRow != -1 && selectedCol != -1 && canEdit[selectedCol][selectedRow]) {
+            board[selectedCol][selectedRow] = cur;
+            selectedRow = -1;
+            selectedCol = -1;
+        }
+    }
+
+    // inside "X" row (clear)
+    else if (mouseY > centerY + bottomOffset + cellSize && 
+             mouseY < centerY + bottomOffset + 2*cellSize) {
+        
+        cur = '.';  // clear value
+
+        // update board if a cell is selected and editable
+        if (selectedRow != -1 && selectedCol != -1 && canEdit[selectedCol][selectedRow]) {
+            board[selectedCol][selectedRow] = cur;
+            selectedRow = -1;
+            selectedCol = -1;
+        }
+    }
+}
+
 
 boolean isValidSudoku(char[][] arr) {
     // check rows and cols
-    for (int i = 0; i < cals; i++) {
+    for (int i = 0; i < GRID_SIZE; i++) {
         boolean[] row = new boolean[10];
         boolean[] col = new boolean[10];
-        for (int j = 0; j < rows; j++) {
+        for (int j = 0; j < GRID_SIZE; j++) {
             // check row
             if (arr[i][j] != '.') {
                 int num = arr[i][j] - '0';
@@ -129,8 +171,8 @@ boolean isValidSudoku(char[][] arr) {
     }
 
     // check 3x3 boxes
-    for (int boxRow = 0; boxRow < rows; boxRow += 3) {
-        for (int boxCol = 0; boxCol < cals; boxCol += 3) {
+    for (int boxRow = 0; boxRow < GRID_SIZE; boxRow += 3) {
+        for (int boxCol = 0; boxCol < GRID_SIZE; boxCol += 3) {
             boolean[] box = new boolean[10];
             for (int i = 0; i < 3; i++) {
                 for (int j = 0; j < 3; j++) {
