@@ -7,15 +7,18 @@ boolean[][] canEdit = new boolean[9][9];
 float centerX, centerY, gridSize;
 final int GRID_SIZE = 9;
 float cellSize;
-int edge = 50;
+int edge = 0;
 float cellHalf;
 float bottomOffset;
 int selectedRow = -1;
 int selectedCol = -1;
 char cur = '.';
+String statusMessage = "";
+boolean keyboard = false;
 
 void setup() {
     fullScreen();
+    orientation(PORTRAIT);
     String[] lines = loadStrings("board.txt");
   
     // make 9x9 board
@@ -30,7 +33,7 @@ void setup() {
     }
     gridSize = min(width, height) - edge;
     centerX = width/2;
-    centerY = gridSize/2 + edge/2;
+    centerY = height/2;
     cellSize = gridSize / GRID_SIZE;
     cellHalf = cellSize / 2;       // for centering text
     bottomOffset = gridSize/2;     // for selection row under grid
@@ -43,31 +46,43 @@ void draw() {
     background(200);
     noStroke();
     textAlign(CENTER, CENTER);
-    drawNum();
+
+    // highlight selected cell (under everything so text draws on top)
     highlightSelectedCell();
-    stroke(0);
-    fill(0);
+
+    // draw numbers and clue shading
+    drawNum();
+
+    // draw grid lines on top
     drawGrid();
-    drawSelectionRow();
-    text("Stage: " + isValidSudoku(board), width/2, height - 30);
+
+
+    // status message
+    fill(0);
+    textSize(40);
+    text(statusMessage, width/10, centerY - gridSize/2 - cellSize/2);
 }
 
 void drawGrid() {
-    for (int i = 0; i < GRID_SIZE + 1; i++) {
+    stroke(0);
+    for (int i = 0; i <= GRID_SIZE; i++) {
         int weight = (i % 3 == 0) ? 3 : 1;
         strokeWeight(weight);
-        line((centerX-gridSize/2)+(i*cellSize), (centerY-gridSize/2), (centerX-gridSize/2)+(i*cellSize), (centerY+gridSize/2));
-        line((centerX-gridSize/2), (centerY-gridSize/2)+(i*cellSize), (centerX+gridSize/2), (centerY-gridSize/2)+(i*cellSize));
+        float x = (centerX - gridSize/2.0) + i*cellSize;
+        line(x, centerY - gridSize/2.0, x, centerY + gridSize/2.0);
+        float y = (centerY - gridSize/2.0) + i*cellSize;
+        line(centerX - gridSize/2.0, y, centerX + gridSize/2.0, y);
     }
 }
 
 void drawNum() {
+    textSize(50);
     for (int row = 0; row < GRID_SIZE; row++) {
         for (int col = 0; col < GRID_SIZE; col++) {
             float cx = centerX - gridSize/2 + col*cellSize + cellHalf;
             float cy = centerY - gridSize/2 + row*cellSize + cellHalf;
             
-            if (!canEdit[row][col]) {
+            if (!canEdit[row][col] && (selectedRow != row || selectedCol != col)) {
                 fill(180);
                 rect(cx - cellHalf, cy - cellHalf, cellSize, cellSize);
             }
@@ -79,72 +94,71 @@ void drawNum() {
     }
 }
 
-void drawSelectionRow() {
-    strokeWeight(1);
-    line(centerX - gridSize/2, centerY + bottomOffset, centerX + gridSize/2, centerY + bottomOffset);
-    line(centerX - gridSize/2, centerY + bottomOffset + cellSize, centerX + gridSize/2, centerY + bottomOffset + cellSize);
-    line(centerX - gridSize/2, centerY + bottomOffset + 2*cellSize, centerX + gridSize/2, centerY + bottomOffset + 2*cellSize);
-    line(centerX - gridSize/2, centerY + bottomOffset, centerX - gridSize/2, centerY + bottomOffset + 2*cellSize);
-    line(centerX - gridSize/2 + 9*cellSize, centerY + bottomOffset, centerX - gridSize/2 + 9*cellSize, centerY + bottomOffset + 2*cellSize);
-    for (int i = 0; i < GRID_SIZE; i++) {
-        float cx = centerX - gridSize/2 + i*cellSize + cellHalf;
-        float cy = centerY + bottomOffset + cellHalf;
-        text(i+1, cx, cy);
-        line(centerX - gridSize/2 + i*cellSize, centerY + bottomOffset, centerX - gridSize/2 + i*cellSize, centerY + bottomOffset + cellSize);
-    }
-    text('X', centerX, centerY + bottomOffset + cellSize + cellHalf);
-    line(centerX - gridSize/2 + GRID_SIZE*cellSize, centerY + bottomOffset, centerX - gridSize/2 + GRID_SIZE*cellSize, centerY + bottomOffset + cellSize);
-}
-
 void highlightSelectedCell() {
     if (selectedRow != -1 && selectedCol != -1) { 
-        fill(0, 0, 255, 100);
-        rect(centerX - gridSize/2 + selectedRow*cellSize,
-             centerY - gridSize/2 + selectedCol*cellSize,
+        fill(255);
+        rect(centerX - gridSize/2 + selectedCol*cellSize,
+             centerY - gridSize/2 + selectedRow*cellSize,
              cellSize, cellSize);
     }
 }
 
 void mousePressed() {
+    float left = centerX - gridSize/2.0;
+    float top = centerY - gridSize/2.0;
+
     // inside Sudoku grid
-    if (mouseX > centerX - gridSize/2 && mouseX < centerX + gridSize/2 &&
-        mouseY > centerY - gridSize/2 && mouseY < centerY + gridSize/2) {
+    if (mouseX > left && mouseX < left + gridSize &&
+        mouseY > top && mouseY < top + gridSize) {
         
-        // pick cell
-        selectedRow = (int)((mouseX - (centerX - gridSize/2)) / cellSize);
-        selectedCol = (int)((mouseY - (centerY - gridSize/2)) / cellSize);
-    }
-    
-    // inside number selection row (1–9)
-    else if (mouseY > centerY + bottomOffset && 
-             mouseY < centerY + bottomOffset + cellSize) {
-        
-        int index = (int)((mouseX - (centerX - gridSize/2)) / cellSize);
-        
-        if (index >= 0 && index < GRID_SIZE) {
-            cur = (char)('1' + index);  // set current number
-        }
+        // compute row, col
+        int col = (int)((mouseX - left) / cellSize);
+        int row = (int)((mouseY - top) / cellSize);
 
-        // update board if a cell is selected and editable
-        if (selectedRow != -1 && selectedCol != -1 && canEdit[selectedCol][selectedRow]) {
-            board[selectedCol][selectedRow] = cur;
+        // set selection
+        selectedRow = row;
+        selectedCol = col;
+
+        if (!keyboard) {
+            openKeyboard();
+            keyboard = true;
+        }
+        return;
+    }
+}
+
+void keyPressed() {
+    // check if a cell is selected
+    if (selectedRow >= 0 && selectedCol >= 0) {
+        // check if the cell is editable (true means editable)
+        if (canEdit[selectedRow][selectedCol]) {
+            // numeric keys (both main row and numpad)
+            if ((key >= '1' && key <= '9')) {
+                char tried = key;
+                char prev = board[selectedRow][selectedCol];
+                board[selectedRow][selectedCol] = tried;
+                if (isValidSudoku(board)) {
+                    statusMessage = "Okay :)";
+                } else {
+                    board[selectedRow][selectedCol] = prev; // revert
+                    statusMessage = "Not Okay :(";
+                }
+                // deselect after attempt
+                selectedRow = -1;
+                selectedCol = -1;
+            } else if (key == BACKSPACE || key == DELETE || key == ' ') {
+                board[selectedRow][selectedCol] = '.';
+                statusMessage = "Cleared";
+                selectedRow = -1;
+                selectedCol = -1;
+            }
+        } else {
+            statusMessage = "Cell not editable";
             selectedRow = -1;
             selectedCol = -1;
         }
-    }
-
-    // inside "X" row (clear)
-    else if (mouseY > centerY + bottomOffset + cellSize && 
-             mouseY < centerY + bottomOffset + 2*cellSize) {
-        
-        cur = '.';  // clear value
-
-        // update board if a cell is selected and editable
-        if (selectedRow != -1 && selectedCol != -1 && canEdit[selectedCol][selectedRow]) {
-            board[selectedCol][selectedRow] = cur;
-            selectedRow = -1;
-            selectedCol = -1;
-        }
+        closeKeyboard();
+        keyboard = false;
     }
 }
 
