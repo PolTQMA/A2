@@ -1,7 +1,7 @@
 //Suduku
 import android.os.Environment;
 
-char[][] board;
+int[][] board;
 boolean[][] canEdit = new boolean[9][9];
 
 float centerX, centerY, gridSize;
@@ -12,7 +12,7 @@ float cellHalf;
 float bottomOffset;
 int selectedRow = -1;
 int selectedCol = -1;
-char cur = '.';
+char cur = 0;
 String statusMessage = "";
 boolean keyboard = false;
 
@@ -22,13 +22,13 @@ void setup() {
     String[] lines = loadStrings("board.txt");
   
     // make 9x9 board
-    board = new char[9][9];
+    board = new int[9][9];
   
     for (int i = 0; i < 9; i++) {
         for (int j = 0; j < 9; j++) {
           char c = lines[i].charAt(j);
-          board[i][j] = c;
-          if (c == '.') canEdit[i][j] = true;
+          board[i][j] = c - '0';
+          if (c == '0') canEdit[i][j] = true;
         }
     }
     gridSize = min(width, height) - edge;
@@ -60,7 +60,8 @@ void draw() {
     // status message
     fill(0);
     textSize(40);
-    text(statusMessage, width/10, centerY - gridSize/2 - cellSize/2);
+    textAlign(LEFT);
+    text(statusMessage, width/20, centerY - gridSize/2 - cellSize/2);
 }
 
 void drawGrid() {
@@ -86,7 +87,7 @@ void drawNum() {
                 fill(180);
                 rect(cx - cellHalf, cy - cellHalf, cellSize, cellSize);
             }
-            if (board[row][col] != '.') {
+            if (board[row][col] != 0) {
                 fill(0);
                 text(board[row][col], cx, cy);
             }
@@ -118,7 +119,6 @@ void mousePressed() {
         // set selection
         selectedRow = row;
         selectedCol = col;
-
         if (!keyboard) {
             openKeyboard();
             keyboard = true;
@@ -134,8 +134,8 @@ void keyPressed() {
         if (canEdit[selectedRow][selectedCol]) {
             // numeric keys (both main row and numpad)
             if ((key >= '1' && key <= '9')) {
-                char tried = key;
-                char prev = board[selectedRow][selectedCol];
+                int tried = key - '0';
+                int prev = board[selectedRow][selectedCol];
                 board[selectedRow][selectedCol] = tried;
                 if (isValidSudoku(board)) {
                     statusMessage = "Okay :)";
@@ -147,7 +147,7 @@ void keyPressed() {
                 selectedRow = -1;
                 selectedCol = -1;
             } else if (key == BACKSPACE || key == DELETE || key == ' ') {
-                board[selectedRow][selectedCol] = '.';
+                board[selectedRow][selectedCol] = 0;
                 statusMessage = "Cleared";
                 selectedRow = -1;
                 selectedCol = -1;
@@ -162,22 +162,21 @@ void keyPressed() {
     }
 }
 
-
-boolean isValidSudoku(char[][] arr) {
+boolean isValidSudoku(int[][] arr) {
     // check rows and cols
     for (int i = 0; i < GRID_SIZE; i++) {
         boolean[] row = new boolean[10];
         boolean[] col = new boolean[10];
         for (int j = 0; j < GRID_SIZE; j++) {
             // check row
-            if (arr[i][j] != '.') {
-                int num = arr[i][j] - '0';
+            if (arr[i][j] != 0) {
+                int num = arr[i][j];
                 if (row[num]) return false;
                 row[num] = true;
             }
             // check col
-            if (arr[j][i] != '.') {
-                int num = arr[j][i] - '0';
+            if (arr[j][i] != 0) {
+                int num = arr[j][i];
                 if (col[num]) return false;
                 col[num] = true;
             }
@@ -190,9 +189,9 @@ boolean isValidSudoku(char[][] arr) {
             boolean[] box = new boolean[10];
             for (int i = 0; i < 3; i++) {
                 for (int j = 0; j < 3; j++) {
-                    char c = arr[boxRow + i][boxCol + j];
-                    if (c != '.') {
-                        int num = c - '0';
+                    int c = arr[boxRow + i][boxCol + j];
+                    if (c != 0) {
+                        int num = c;
                         if (box[num]) return false;
                         box[num] = true;
                     }
